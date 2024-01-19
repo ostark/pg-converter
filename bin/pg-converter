@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+require __DIR__.'/../vendor/autoload.php';
+
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\SingleCommandApplication;
+
+
+(new SingleCommandApplication())
+    ->setName('PG Converter')
+    ->setVersion('0.1.0')
+    ->addArgument('input-file', InputArgument::REQUIRED, 'Postgres dump')
+    ->addArgument('output-file', InputArgument::REQUIRED, 'Mysql dump')
+    ->setCode(code: function (InputInterface $input, OutputInterface $output): int {
+       $output->writeln('Done.');
+       return Command::SUCCESS;
+    })
+    ->run();
