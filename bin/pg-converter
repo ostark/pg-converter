@@ -2,6 +2,7 @@
 <?php
 require __DIR__.'/../vendor/autoload.php';
 
+use ostark\PgConverter\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,7 +16,11 @@ use Symfony\Component\Console\SingleCommandApplication;
     ->setVersion('0.1.0')
     ->addArgument('input-file', InputArgument::REQUIRED, 'Postgres dump')
     ->addArgument('output-file', InputArgument::REQUIRED, 'Mysql dump')
+    ->addOption('schema', 's', InputOption::VALUE_OPTIONAL, 'Table schema', Application::DEFAULT_SCHEMA)
     ->setCode(code: function (InputInterface $input, OutputInterface $output): int {
+
+        (new Application())->handle();
+
        $output->writeln('Done.');
        return Command::SUCCESS;
     })

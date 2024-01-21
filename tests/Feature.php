@@ -1,9 +1,9 @@
 <?php
 
-use ostark\PgConverter\Converter;
+use ostark\PgConverter\Application;
 
 it('foo', function () {
-    $example = new Converter();
+    $example = new Application();
 
     $result = $example->foo();
 
