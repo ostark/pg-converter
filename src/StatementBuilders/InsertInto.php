@@ -20,6 +20,7 @@ class InsertInto implements Statement
 
     function toSql(): string
     {
+        return "";
         return "MODIFIED:" . $this->statement . PHP_EOL;
     }
 }

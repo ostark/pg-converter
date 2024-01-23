@@ -25,7 +25,7 @@ class GenericMultiLine
     public function add(string $line): void
     {
         $this->isCollecting = true;
-        $this->lines[] = rtrim($line);
+        $this->lines[] = ($line);
     }
 
     public function setStopCharacter(string $char): void
@@ -45,7 +45,7 @@ class GenericMultiLine
             return false;
         }
 
-        return (str_starts_with($line, $this->stopCharacter));
+        return (str_starts_with(trim($line), $this->stopCharacter));
     }
 
 

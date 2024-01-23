@@ -28,19 +28,17 @@ class MainCommand
         $skippedTables = ['fooo'];
 
         $converter = new Converter($lines, $schema, $skippedTables);
-        $lines = $converter->convert($lines);
-
-
-        print_r([
-            "ERRORS" =>  $converter->getErrors(),
-            "UNKNOWN" =>  $converter->getUnknownStatements()
-        ]);
+        $lines = $converter->convert();
 
         // Store line by line
         $target = tempnam('/tmp', 'pg-converter-') . '.sql';
-        (new FileWriter($lines, $target))->store();
+        $lineCount = (new FileWriter($lines, $target))->store();
 
-
+        print_r([
+            "ERRORS" =>  $converter->getErrors(),
+            "UNKNOWN" =>  array_slice($converter->getUnknownStatements(), 0, 50),
+            "LINES_WRITTEN" => $lineCount
+        ]);
     }
 
 }

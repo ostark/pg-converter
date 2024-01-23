@@ -9,17 +9,21 @@ class FileWriter
         // ...
     }
 
-    public function store()
+    public function store(): int
     {
+        $lineCount = 0;
         $handle = fopen($this->file, 'w');
 
         foreach ($this->lines as $line) {
-            echo $line;
-            fwrite($handle, $line);
+            $lineCount++;
+            if (fwrite($handle, $line)) {
+                $lineCount++;
+            }
         }
 
         fclose($handle);
-    }
 
+        return $lineCount;
+    }
 
 }

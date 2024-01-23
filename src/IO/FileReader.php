@@ -3,9 +3,12 @@
 namespace ostark\PgConverter\IO;
 
 /**
- * Here we try to implement a memory efficient way of reading the content of the given file name.
+ * Why not simply use file_get_contents() and we are done?
+ *
+ * This class implements a memory efficient way of reading the content of the given file name.
  * Instead of loading the whole string in memory we read it line-by-line.
- * From outside, we can iterate over the result that implements \Iterator
+ * From outside, we can iterate over the \Generator result that implements
+ * \Iterator, so it feels almost like an array
  *
  */
 class FileReader

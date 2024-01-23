@@ -3,9 +3,8 @@
 namespace ostark\PgConverter\StatementBuilders;
 
 use ostark\PgConverter\Statement;
-use ostark\PgConverter\StatementBuilders;
 
-class CreateIndex implements Statement
+class AlterTableAutoIncrement implements Statement
 {
 
     public function __construct(protected string $statement)
@@ -20,7 +19,9 @@ class CreateIndex implements Statement
 
     function toSql(): string
     {
+        echo "MODIFIED:" . $this->statement . PHP_EOL;
         return "";
-        return "MODIFIED:" . $this->statement . PHP_EOL;
+
+
     }
 }
