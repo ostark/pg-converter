@@ -1,10 +1,11 @@
 <?php
 
-namespace ostark\PgConverter\Statement;
+namespace ostark\PgConverter\StatementBuilders;
 
 use ostark\PgConverter\Statement;
+use ostark\PgConverter\StatementBuilders;
 
-class InsertInto implements Statement
+class CreateIndex implements Statement
 {
 
     public function __construct(protected string $statement)

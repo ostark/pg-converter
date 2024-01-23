@@ -1,11 +1,13 @@
 <?php
 
-namespace ostark\PgConverter\Statement;
+namespace ostark\PgConverter\StatementBuilders;
 
 use ostark\PgConverter\Statement;
+use ostark\PgConverter\StatementBuilders;
 
-class CreateTable implements Statement
+class InsertInto implements Statement
 {
+
     public function __construct(protected string $statement)
     {
         // ...
@@ -14,7 +16,6 @@ class CreateTable implements Statement
     function setTable(string $table): Statement
     {
         // TODO: Implement setTable() method.
-        return $this;
     }
 
     function toSql(): string

@@ -1,9 +1,9 @@
 <?php
 
-namespace ostark\PgConverter;
+namespace ostark\PgConverter\StatementBuilders;
 
 
-class Builder
+class GenericMultiLine
 {
     protected array $lines = [];
 
@@ -25,7 +25,7 @@ class Builder
     public function add(string $line): void
     {
         $this->isCollecting = true;
-        $this->lines[] = $line;
+        $this->lines[] = rtrim($line);
     }
 
     public function setStopCharacter(string $char): void

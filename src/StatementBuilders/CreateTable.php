@@ -1,12 +1,12 @@
 <?php
 
-namespace ostark\PgConverter\Statement;
+namespace ostark\PgConverter\StatementBuilders;
 
 use ostark\PgConverter\Statement;
+use ostark\PgConverter\StatementBuilders;
 
-class CreateIndex implements Statement
+class CreateTable implements Statement
 {
-
     public function __construct(protected string $statement)
     {
         // ...
@@ -15,6 +15,7 @@ class CreateIndex implements Statement
     function setTable(string $table): Statement
     {
         // TODO: Implement setTable() method.
+        return $this;
     }
 
     function toSql(): string
