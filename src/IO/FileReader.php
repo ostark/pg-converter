@@ -9,7 +9,6 @@ namespace ostark\PgConverter\IO;
  * Instead of loading the whole string in memory we read it line-by-line.
  * From outside, we can iterate over the \Generator result that implements
  * \Iterator, so it feels almost like an array
- *
  */
 class FileReader
 {
@@ -17,13 +16,12 @@ class FileReader
 
     public function __construct(string $pathToFile)
     {
-        if (!file_exists($pathToFile)) {
+        if (! file_exists($pathToFile)) {
             throw new \InvalidArgumentException("Unable to locate file: $pathToFile");
         }
 
         $this->pathToFile = $pathToFile;
     }
-
 
     public function getLines(): \Iterator
     {

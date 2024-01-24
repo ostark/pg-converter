@@ -2,15 +2,13 @@
 
 namespace ostark\PgConverter\StatementBuilders;
 
-
 class GenericMultiLine
 {
-    protected array $lines = [];
+    private array $lines = [];
 
-    protected bool $isCollecting = false;
+    private bool $isCollecting = false;
 
-    protected string $stopCharacter = "";
-
+    private string $stopCharacter = '';
 
     public function __construct(public ?string $name = null)
     {
@@ -25,7 +23,7 @@ class GenericMultiLine
     public function add(string $line): void
     {
         $this->isCollecting = true;
-        $this->lines[] = ($line);
+        $this->lines[] = rtrim($line);
     }
 
     public function setStopCharacter(string $char): void
@@ -33,21 +31,19 @@ class GenericMultiLine
         $this->stopCharacter = $char;
     }
 
-    public function isLastMultiline(string $line) : bool
+    public function isLastMultiline(string $line): bool
     {
 
-        if ($line == "") {
+        if ($line == '') {
             return false;
         }
-
 
         if ($this->isCollecting === false) {
             return false;
         }
 
-        return (str_starts_with(trim($line), $this->stopCharacter));
+        return str_starts_with(trim($line), $this->stopCharacter);
     }
-
 
     public function toString(): string
     {
@@ -68,9 +64,7 @@ class GenericMultiLine
     {
         $this->lines = [];
         $this->isCollecting = false;
-        $this->stopCharacter = "";
+        $this->stopCharacter = '';
         $this->name = null;
     }
-
-
 }

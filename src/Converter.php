@@ -12,6 +12,7 @@ use ostark\PgConverter\StatementBuilders\InsertInto;
 class Converter
 {
     private array $errors = [];
+
     private array $unknownStatements = [];
 
     public function __construct(
@@ -22,11 +23,11 @@ class Converter
 
     }
 
-
     public function convert(): \Iterator
     {
         $builder = new GenericMultiLine();
 
+        /** @var string $line */
         foreach ($this->lines as $line) {
 
             if ($builder->isLastMultiline($line)) {
@@ -37,97 +38,98 @@ class Converter
                 yield $this->convertStatement($name, $statement);
 
                 $builder->reset();
+
                 continue;
             }
 
             if ($builder->isCollectingMultilines()) {
                 $builder->add($line);
+
                 continue;
             }
 
             // Below we detect different the sql statements
             // that spawn across multiple lines
 
-            if (str_starts_with($line, "COPY") && str_ends_with(rtrim($line), "FROM stdin;")) {
-                $builder = new GenericMultiLine("COPY");
+            if (str_starts_with($line, 'COPY') && str_ends_with(rtrim($line), 'FROM stdin;')) {
+                $builder = new GenericMultiLine('COPY');
                 $builder->setStopCharacter("\.");
                 $builder->add($line);
 
                 continue;
             }
 
-            if (str_starts_with($line, "CREATE TABLE")) {
+            if (str_starts_with($line, 'CREATE TABLE')) {
 
-                $builder = new GenericMultiLine("CREATE_TABLE");
-                $builder->setStopCharacter(");");
+                $builder = new GenericMultiLine('CREATE_TABLE');
+                $builder->setStopCharacter(');');
                 $builder->add($line);
 
                 continue;
             }
 
-
-            if (str_starts_with($line, "CREATE SEQUENCE")) {
-                $builder = new GenericMultiLine("CREATE_SEQUENCE");
-                $builder->setStopCharacter("CACHE 1;");
+            if (str_starts_with($line, 'CREATE SEQUENCE')) {
+                $builder = new GenericMultiLine('CREATE_SEQUENCE');
+                $builder->setStopCharacter('CACHE 1;');
                 $builder->add($line);
+
                 continue;
             }
 
-            if (str_starts_with($line, "CREATE UNIQUE INDEX") || str_starts_with($line, "CREATE INDEX")) {
-                yield  $this->convertStatement('CREATE_INDEX', $line);
+            if (str_starts_with($line, 'CREATE UNIQUE INDEX') || str_starts_with($line, 'CREATE INDEX')) {
+                yield $this->convertStatement('CREATE_INDEX', $line);
+
                 continue;
             }
 
-            if (str_starts_with($line, "ALTER TABLE")) {
+            if (str_starts_with($line, 'ALTER TABLE')) {
                 $one = $line;
                 $this->lines->next();
-                $two =  $this->lines->current();
-                yield $this->convertStatement('ADD_CONSTRAINT', $one . $two);
+                $two = $this->lines->current();
+                yield $this->convertStatement('ADD_CONSTRAINT', $one.$two);
 
                 continue;
             }
 
-            if (str_starts_with($line, "ALTER TABLE IF EXISTS")) {
+            if (str_starts_with($line, 'ALTER TABLE IF EXISTS')) {
                 continue;
             }
-            if (str_starts_with($line, "DROP INDEX IF EXISTS")) {
-                continue;
-            }
-
-            if (str_starts_with($line, "DROP SEQUENCE IF EXISTS")) {
+            if (str_starts_with($line, 'DROP INDEX IF EXISTS')) {
                 continue;
             }
 
-            if (str_starts_with($line, "ALTER SEQUENCE")) {
+            if (str_starts_with($line, 'DROP SEQUENCE IF EXISTS')) {
+                continue;
+            }
+
+            if (str_starts_with($line, 'ALTER SEQUENCE')) {
                 // Deferred (auto increment)
                 continue;
             }
-            if (str_starts_with($line, "DROP TABLE IF EXISTS")) {
+            if (str_starts_with($line, 'DROP TABLE IF EXISTS')) {
                 continue;
             }
-            if (str_starts_with($line, "ALTER TABLE ONLY") && strstr($line, "::regclass)")) {
+            if (str_starts_with($line, 'ALTER TABLE ONLY') && strstr($line, '::regclass)')) {
                 continue;
             }
-            if (str_starts_with($line, "SELECT pg_catalog")) {
+            if (str_starts_with($line, 'SELECT pg_catalog')) {
                 continue;
             }
-            if (str_starts_with($line, "SET ")) {
+            if (str_starts_with($line, 'SET ')) {
                 continue;
             }
-            if (str_starts_with($line, "CREATE SCHEMA")) {
+            if (str_starts_with($line, 'CREATE SCHEMA')) {
                 continue;
             }
-            if (str_starts_with($line, "DROP SCHEMA")) {
+            if (str_starts_with($line, 'DROP SCHEMA')) {
                 continue;
             }
-            if (str_starts_with($line, "COMMENT ON SCHEMA")) {
+            if (str_starts_with($line, 'COMMENT ON SCHEMA')) {
                 continue;
             }
-
-
 
             // Lines to ignore
-            if (str_starts_with($line, "--") || trim($line) === "") {
+            if (str_starts_with($line, '--') || trim($line) === '') {
                 // Skip, just a sql comment
                 continue;
             }
@@ -137,7 +139,6 @@ class Converter
         }
 
     }
-
 
     public function getErrors(): array
     {
@@ -149,10 +150,9 @@ class Converter
         return $this->unknownStatements;
     }
 
-
     private function convertStatement(?string $type, string $sql): string
     {
-        return match($type) {
+        return match ($type) {
             'CREATE_TABLE' => (new CreateTable($sql))->toSql(),
             'CREATE_INDEX' => (new CreateIndex($sql))->toSql(),
             'CREATE_SEQUENCE' => (new AlterTableAutoIncrement($sql))->toSql(),
@@ -161,8 +161,5 @@ class Converter
             default => throw new \Exception("Unsupported Statement: $type"),
         };
 
-
-
     }
-
 }

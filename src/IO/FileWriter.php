@@ -4,7 +4,7 @@ namespace ostark\PgConverter\IO;
 
 class FileWriter
 {
-    public function __construct(readonly public \Iterator $lines, public string $file )
+    public function __construct(readonly public \Iterator $lines, public string $file)
     {
         // ...
     }
@@ -12,8 +12,11 @@ class FileWriter
     public function store(): int
     {
         $lineCount = 0;
-        $handle = fopen($this->file, 'w');
+        if(!$handle = fopen($this->file, 'w')) {
+            throw new \Exception("Unable to write file: $this->file");
+        }
 
+        /** @var string $line */
         foreach ($this->lines as $line) {
             $lineCount++;
             if (fwrite($handle, $line)) {
@@ -25,5 +28,4 @@ class FileWriter
 
         return $lineCount;
     }
-
 }

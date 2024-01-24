@@ -20,7 +20,7 @@ class MainCommand
     public function run(): void
     {
         // Read lines from source file
-        $file = __DIR__ . '/../tests/examples/craft-demo.sql';
+        $file = __DIR__.'/../tests/examples/craft-demo.sql';
         $lines = (new FileReader($file))->getLines();
 
         // convert
@@ -31,14 +31,13 @@ class MainCommand
         $lines = $converter->convert();
 
         // Store line by line
-        $target = tempnam('/tmp', 'pg-converter-') . '.sql';
+        $target = tempnam('/tmp', 'pg-converter-').'.sql';
         $lineCount = (new FileWriter($lines, $target))->store();
 
         print_r([
-            "ERRORS" =>  $converter->getErrors(),
-            "UNKNOWN" =>  array_slice($converter->getUnknownStatements(), 0, 50),
-            "LINES_WRITTEN" => $lineCount
+            'ERRORS' => $converter->getErrors(),
+            'UNKNOWN' => array_slice($converter->getUnknownStatements(), 0, 50),
+            'LINES_WRITTEN' => $lineCount,
         ]);
     }
-
 }

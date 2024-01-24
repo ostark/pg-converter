@@ -4,6 +4,7 @@ namespace ostark\PgConverter;
 
 interface Statement
 {
-    function setTable(string $table): self;
-    function toSql(): string;
+    public function setTable(string $table): self;
+
+    public function toSql(): string;
 }

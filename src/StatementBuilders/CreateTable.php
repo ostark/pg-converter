@@ -3,7 +3,6 @@
 namespace ostark\PgConverter\StatementBuilders;
 
 use ostark\PgConverter\Statement;
-use ostark\PgConverter\StatementBuilders;
 
 class CreateTable implements Statement
 {
@@ -12,15 +11,16 @@ class CreateTable implements Statement
         // ...
     }
 
-    function setTable(string $table): Statement
+    public function setTable(string $table): Statement
     {
         // TODO: Implement setTable() method.
         return $this;
     }
 
-    function toSql(): string
+    public function toSql(): string
     {
-        return "";
-        return "MODIFIED:" . $this->statement . PHP_EOL;
+        return '';
+
+        return 'MODIFIED:'.$this->statement.PHP_EOL;
     }
 }
