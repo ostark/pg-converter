@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": "^8.1.0",
+        "composer/pcre": "^3.1",
         "symfony/console": "^6.0 | ^7.0"
     },
     "require-dev": {
@@ -22,7 +23,8 @@
     "autoload": {
         "psr-4": {
             "ostark\\PgConverter\\": "src/"
-        }
+        },
+        "files": ["src/String.php"]
     },
     "autoload-dev": {
         "psr-4": {

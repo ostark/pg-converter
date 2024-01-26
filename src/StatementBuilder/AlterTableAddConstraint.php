@@ -1,6 +1,6 @@
 <?php
 
-namespace ostark\PgConverter\StatementBuilders;
+namespace ostark\PgConverter\StatementBuilder;
 
 class AlterTableAddConstraint implements \ostark\PgConverter\Statement
 {
@@ -14,4 +14,9 @@ class AlterTableAddConstraint implements \ostark\PgConverter\Statement
         return '';
         // TODO: Implement toSql() method.
     }
+
+    // function that parses postgres alter table add constraint statement to mysql
+
+
+
 }

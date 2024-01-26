@@ -1,8 +1,9 @@
 <?php
 
-namespace ostark\PgConverter\StatementBuilders;
+namespace ostark\PgConverter\StatementBuilder;
 
 use ostark\PgConverter\Statement;
+use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 
 class AlterTableAutoIncrement implements Statement
 {
@@ -22,5 +23,10 @@ class AlterTableAutoIncrement implements Statement
 
         return '';
 
+    }
+
+    public function make(): Result
+    {
+        // TODO: Implement make() method.
     }
 }

@@ -2,9 +2,9 @@
 
 namespace ostark\PgConverter;
 
+use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
+
 interface Statement
 {
-    public function setTable(string $table): self;
-
-    public function toSql(): string;
+    public function make(): Result;
 }

@@ -2,10 +2,16 @@
 
 use ostark\PgConverter\MainCommand;
 
-it('foo', function () {
-    $example = new MainCommand();
+it('tmp', function () {
 
-    $result = $example->foo();
 
-    expect($result)->toBe('bar');
+    $line = "\"licenseKeyStatus\" character varying(255) DEFAULT 'unknown'::character varying NOT NULL,";
+    $parts = explode(' ', $line, 2);
+
+    $field = trim($parts[0], '"');
+    $def = rtrim($parts[1], ',');
+
+
+
+    expect([])->toBe([]);
 });

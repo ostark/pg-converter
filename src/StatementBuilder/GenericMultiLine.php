@@ -1,6 +1,6 @@
 <?php
 
-namespace ostark\PgConverter\StatementBuilders;
+namespace ostark\PgConverter\StatementBuilder;
 
 class GenericMultiLine
 {

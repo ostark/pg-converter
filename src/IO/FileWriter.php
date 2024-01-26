@@ -9,6 +9,7 @@ class FileWriter
         // ...
     }
 
+
     public function store(): int
     {
         $lineCount = 0;

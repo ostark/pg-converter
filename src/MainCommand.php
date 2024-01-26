@@ -24,10 +24,9 @@ class MainCommand
         $lines = (new FileReader($file))->getLines();
 
         // convert
-        $schema = 'public';
         $skippedTables = ['fooo'];
 
-        $converter = new Converter($lines, $schema, $skippedTables);
+        $converter = new Converter($lines, $skippedTables);
         $lines = $converter->convert();
 
         // Store line by line

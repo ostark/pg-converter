@@ -2,12 +2,13 @@
 
 namespace ostark\PgConverter;
 
-use ostark\PgConverter\StatementBuilders\AlterTableAddConstraint;
-use ostark\PgConverter\StatementBuilders\AlterTableAutoIncrement;
-use ostark\PgConverter\StatementBuilders\CreateIndex;
-use ostark\PgConverter\StatementBuilders\CreateTable;
-use ostark\PgConverter\StatementBuilders\GenericMultiLine;
-use ostark\PgConverter\StatementBuilders\InsertInto;
+use ostark\PgConverter\StatementBuilder\AlterTableAddConstraint;
+use ostark\PgConverter\StatementBuilder\AlterTableAutoIncrement;
+use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
+use ostark\PgConverter\StatementBuilder\CreateIndex;
+use ostark\PgConverter\StatementBuilder\CreateTable;
+use ostark\PgConverter\StatementBuilder\GenericMultiLine;
+use ostark\PgConverter\StatementBuilder\InsertInto;
 
 class Converter
 {
@@ -17,8 +18,7 @@ class Converter
 
     public function __construct(
         private \Iterator $lines,
-        private string $schema,
-        private array $skippedTables = [])
+        public array $skippedTables = [])
     {
 
     }
@@ -150,13 +150,13 @@ class Converter
         return $this->unknownStatements;
     }
 
-    private function convertStatement(?string $type, string $sql): string
+    private function convertStatement(?string $type, string $sql): Result
     {
         return match ($type) {
-            'CREATE_TABLE' => (new CreateTable($sql))->toSql(),
-            'CREATE_INDEX' => (new CreateIndex($sql))->toSql(),
-            'CREATE_SEQUENCE' => (new AlterTableAutoIncrement($sql))->toSql(),
-            'ADD_CONSTRAINT' => (new AlterTableAddConstraint($sql))->toSql(),
+            'CREATE_TABLE' => (new CreateTable($sql))->make(),
+            'CREATE_INDEX' => (new CreateIndex($sql))->make(),
+            'CREATE_SEQUENCE' => (new AlterTableAutoIncrement($sql))->make(),
+            'ADD_CONSTRAINT' => (new AlterTableAddConstraint($sql))->make(),
             'COPY' => (new InsertInto($sql))->toSql(),
             default => throw new \Exception("Unsupported Statement: $type"),
         };
