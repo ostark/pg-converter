@@ -8,7 +8,7 @@ use ostark\PgConverter\Statement;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Error;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
-use function ostark\PgConverter\String\replace_all;
+use function ostark\PgConverter\String\replace_if_match;
 
 /*
  * Example statement
@@ -84,7 +84,7 @@ class CreateTable implements Statement
         $def = $parts[1];
 
         // Handle CONSTRAINTs, most we just skip
-        // We modify and keep: CONSTRAINT users_pkey PRIMARY KEY (id));
+        // Exception: CONSTRAINT users_pkey PRIMARY KEY (id));
         if ('CONSTRAINT' === $field) {
             if ($def = $this->handleConstraint($def)) {
                 return $def;
@@ -92,17 +92,19 @@ class CreateTable implements Statement
             return null;
         }
 
-        // Handle character varying
+        // Handle character varying and other text types
         if (preg_match("/character varying\((?<length>\d+)\)/", $def, $matches)) {
             $length = $matches['length'];
             $def = ($length > 255)
                 ? str_replace("character varying({$length})", "text", $def)
                 : str_replace("character varying({$length})", "varchar({$length})", $def);
         }
-
+        if (str_contains($def, "character varying")) {
+            $def = str_replace("character varying", "varchar(255)", $def);
+        }
         foreach (['character', 'bpchar', 'char'] as $type) {
             if (str_starts_with($def, "$type(")) {
-                $def = str_replace("$type", "varchar", $def);
+                $def = str_replace("$type(", "varchar(", $def);
             }
         }
 
@@ -113,7 +115,7 @@ class CreateTable implements Statement
             'character' => 'varchar(255)'
         ]);
 
-        // Common types, but slightly different
+        // Common types, but slightly different syntax
         $def = strtr($def, [
             'int_unsigned' => 'integer UNSIGNED',
             'smallint_unsigned' => 'smallint UNSIGNED',
@@ -126,16 +128,23 @@ class CreateTable implements Statement
         // Array types
         $def = str_replace(['text[]', 'character varying[]'], 'longtext', $def);
 
-        // Replace default values
-        $def = str_replace(['DEFAULT \'(.*)\'::int[^ ,]*', 'DEFAULT \'(.*)\'::smallint[^ ,]*', 'DEFAULT \'(.*)\'::bigint[^ ,]*'], '$1', $def);
+        // Replace integer default values
+        if (preg_match("/DEFAULT \'(?<default_int>\d+)\'::int|smallint|bigint[^ ,]", $def, $matches)) {
+            $default = $matches['default_int'];
+        }
 
-        // Strip off sequence defaults
+
+            // DEFAULT \('([0-9]*)'::bigint/
+
+        // Strip  sequence defaults
         $def = str_replace('DEFAULT nextval\(', '', $def);
+
+        // Strip extra type info
         $def=preg_replace("/::.*,/",",",$def);
         $def=preg_replace("/::.*$/","\n",$def);
 
         // Convert time and timestamptypes
-        $def = replace_all([
+        $def = replace_if_match([
             'time(\([0-6]\))? with time zone' => 'time',
             'time(\([0-6]\))? without time zone' => 'time',
             'timestamp(\([0-6]\))? with time zone' => 'timestamp',

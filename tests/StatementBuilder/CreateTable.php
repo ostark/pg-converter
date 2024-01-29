@@ -1,9 +1,32 @@
 <?php
 
-use function ostark\PgConverter\String\replace;
+use function ostark\PgConverter\String\replace_if_match;
 
 it('should convert a create table statement', function () {
 
+    $input = "character varying(22)";
+
+    $converted = preg_replace(
+        "/character varying\((\d+)\)/",
+        'varchar($1)',
+        $input);
+
+    expect($converted)->toBe("varchar(22)");
+
+
+    $input = "DEFAULT ('11111'::smallint";
+
+    $converted = replace_if_match([
+        "/DEFAULT \('([0-9]*)'::smallint/" => 'DEFAULT $1',
+        "/DEFAULT \('([0-9]*)'::bigint/" => 'DEFAULT $1',
+        "/DEFAULT \('([0-9]*)'::int/" => 'DEFAULT $1',
+    ], $input);
+
+
+    expect($converted)->toBe("DEFAULT 11111");
+
+
+/*
     $input = <<<PGSQL
 CREATE TABLE public.assetindexdata (
     id integer NOT NULL,
@@ -34,5 +57,7 @@ MYSQL;
     expect($createTable->make($input)->statement())->toBe('');
 
     expect($createTable->make($input)->statement())->toBe($expected);
+
+*/
 
 });

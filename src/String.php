@@ -2,7 +2,7 @@
  namespace ostark\PgConverter\String;
 
 
- function replace_all(array $mapping, string $subject): string
+ function replace_if_match(array $mapping, string $subject): string
  {
      foreach ($mapping as $pattern => $replacement) {
          $result = \preg_replace($pattern, $replacement, $subject);
