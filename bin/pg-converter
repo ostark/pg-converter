@@ -1,27 +1,16 @@
 #!/usr/bin/env php
 <?php
+
+use ostark\PgConverter\Command\ConvertCommand;
+use Symfony\Component\Console\Application;
+
 require __DIR__.'/../vendor/autoload.php';
-use ostark\PgConverter\MainCommand;
-use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\SingleCommandApplication;
 
+$defaultCommand = new ConvertCommand();
 
-(new SingleCommandApplication())
-    ->setName('PG Converter')
-    ->setVersion('0.1.0')
-    ->addArgument('input-file', InputArgument::REQUIRED, 'Postgres dump')
-    ->addArgument('output-file', InputArgument::REQUIRED, 'Mysql dump')
-    ->addOption('schema', 's', InputOption::VALUE_OPTIONAL, 'Table schema', MainCommand::DEFAULT_SCHEMA)
-    ->setCode(code: function (InputInterface $input, OutputInterface $output): int {
+$application = new Application('PG Converter', '0.1.0');
+$application->add($defaultCommand);
+$application->setDefaultCommand($defaultCommand->getName());
+$application->run();
 
-       $cmd = new ostark\PgConverter\MainCommand($input, $output);
-       $cmd->run();
-
-       $output->writeln('Done.');
-       return Command::SUCCESS;
-    })
-    ->run();
+// Path: bin/pg-converter

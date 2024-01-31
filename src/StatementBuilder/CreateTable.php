@@ -2,12 +2,10 @@
 
 namespace ostark\PgConverter\StatementBuilder;
 
-use Composer\Pcre\PcreException;
-use Composer\Pcre\Preg;
-use ostark\PgConverter\Statement;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Error;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
+
 use function ostark\PgConverter\String\replace_if_match;
 
 /*
@@ -30,7 +28,6 @@ use function ostark\PgConverter\String\replace_if_match;
 
 class CreateTable implements Statement
 {
-
     private array $lines = [];
 
     private string $table;
@@ -50,26 +47,24 @@ class CreateTable implements Statement
         array_pop($this->lines);
     }
 
-
     public function make(): Result
     {
-        $lines = array_map(fn($line) => $this->convertLine($line), $this->lines);
+        $lines = array_map(fn ($line) => $this->convertLine($line), $this->lines);
         $lines = array_filter($lines);
 
         if (count($lines) === 0) {
-            return new Error("-- ERROR: No fields after conversion for CREATE TABLE {$this->table} ... ", $this->table);
+            return new Error($this->lines[0]);
         }
 
         // Indent lines
-        $lines = array_map(fn($line) => "  {$line}", $lines);
+        $lines = array_map(fn ($line) => "  {$line}", $lines);
 
         $start = "CREATE TABLE {$this->table} (\n";
         $fieldDefinitions = rtrim(implode(PHP_EOL, $lines), ',');
         $end = "\n);";
 
-        return new Success($start . $fieldDefinitions . $end, $this->table);
+        return new Success($start.$fieldDefinitions.$end);
     }
-
 
     /**
      * Example lines
@@ -77,7 +72,7 @@ class CreateTable implements Statement
      * - "licenseKeyStatus" character varying(255) DEFAULT 'unknown'::character varying NOT NULL,
      * - "anotherField" integer,
      */
-    private function convertLine(string $line): ?string
+    private function convertLine(string $line): string
     {
         $parts = explode(' ', trim($line), 2);
         $field = trim($parts[0], '"');
@@ -85,26 +80,25 @@ class CreateTable implements Statement
 
         // Handle CONSTRAINTs, most we just skip
         // Exception: CONSTRAINT users_pkey PRIMARY KEY (id));
-        if ('CONSTRAINT' === $field) {
-            if ($def = $this->handleConstraint($def)) {
-                return $def;
+        if ($field === 'CONSTRAINT') {
+            if ($constraint = $this->handleConstraint($def)) {
+                $def = $constraint;
             }
-            return null;
         }
 
         // Handle character varying and other text types
         if (preg_match("/character varying\((?<length>\d+)\)/", $def, $matches)) {
             $length = $matches['length'];
             $def = ($length > 255)
-                ? str_replace("character varying({$length})", "text", $def)
+                ? str_replace("character varying({$length})", 'text', $def)
                 : str_replace("character varying({$length})", "varchar({$length})", $def);
         }
-        if (str_contains($def, "character varying")) {
-            $def = str_replace("character varying", "varchar(255)", $def);
+        if (str_contains($def, 'character varying')) {
+            $def = str_replace('character varying', 'varchar(255)', $def);
         }
         foreach (['character', 'bpchar', 'char'] as $type) {
             if (str_starts_with($def, "$type(")) {
-                $def = str_replace("$type(", "varchar(", $def);
+                $def = str_replace("$type(", 'varchar(', $def);
             }
         }
 
@@ -112,7 +106,9 @@ class CreateTable implements Statement
         $def = strtr($def, [
             'serial' => 'integer auto_increment',
             'uuid' => 'varchar(36)',
-            'character' => 'varchar(255)'
+            'character' => 'varchar(255)',
+            'tsvector' => 'text',
+            'tsquery' => 'text',
         ]);
 
         // Common types, but slightly different syntax
@@ -121,51 +117,38 @@ class CreateTable implements Statement
             'smallint_unsigned' => 'smallint UNSIGNED',
             'bigint_unsigned' => 'bigint UNSIGNED',
             'bytea' => 'BLOB',
-            'boolean' => 'bool',
             'jsonb' => 'json',
         ]);
 
-        // Array types
+        // Array types to strings
         $def = str_replace(['text[]', 'character varying[]'], 'longtext', $def);
-
-        // Replace integer default values
-        if (preg_match("/DEFAULT \'(?<default_int>\d+)\'::int|smallint|bigint[^ ,]", $def, $matches)) {
-            $default = $matches['default_int'];
-        }
-
-
-            // DEFAULT \('([0-9]*)'::bigint/
-
-        // Strip  sequence defaults
-        $def = str_replace('DEFAULT nextval\(', '', $def);
-
-        // Strip extra type info
-        $def=preg_replace("/::.*,/",",",$def);
-        $def=preg_replace("/::.*$/","\n",$def);
 
         // Convert time and timestamptypes
         $def = replace_if_match([
-            'time(\([0-6]\))? with time zone' => 'time',
-            'time(\([0-6]\))? without time zone' => 'time',
-            'timestamp(\([0-6]\))? with time zone' => 'timestamp',
+            '/time(\([0-6]\))? with time zone/' => 'time',
+            '/time(\([0-6]\))? without time zone/' => 'time',
+            '/timestamp(\([0-6]\))? with time zone/' => 'timestamp',
             '/timestamp(\([0-6]\))? without time zone/' => 'timestamp',
             '/timestamp(\([0-6]\))? DEFAULT now()/' => 'timestamp DEFAULT CURRENT_TIMESTAMP',
-            '/timestamp DEFAULT now()/' => 'timestamp DEFAULT CURRENT_TIMESTAMP'
+            '/timestamp DEFAULT now()/' => 'timestamp DEFAULT CURRENT_TIMESTAMP',
         ], $def);
-
 
         // Convert other exotic types to varchar
         $def = str_replace(['cidr', 'inet', 'macaddr', 'money', 'interval', 'longtext DEFAULT [^,]*( NOT NULL)?'], ['varchar(32)', 'varchar(32)', 'varchar(32)', 'varchar(32)', 'varchar(64)', 'longtext'], $def);
 
-        // Strip function defaults
-        $def = str_replace(['DEFAULT .*\(\)'], '', $def);
+        // Handle types with defaults
+        $def = replace_if_match([
+            '/DEFAULT .*\(\)/' => '', // function defaults
+            '/DEFAULT nextval\(.*\)/' => '', // sequence defaults
+            '/DEFAULT json_build_object\((.*)\)/' => 'DEFAULT json_object($1)',
+            '/DEFAULT \'\(([0-9]*)\)\'::int|smallint|bigint/' => 'DEFAULT ${1}',
+            '/DEFAULT longtext/' => '',
+            '/boolean DEFAULT true/' => 'boolean DEFAULT 1',
+            '/boolean DEFAULT false/' => 'boolean DEFAULT 0',
+        ], $def);
 
-        // Handle json_build_object defaults
-        $def = str_replace('DEFAULT json_build_object\((.*)\)', 'DEFAULT json_object($1)', $def);
-
-        // Handle text types with defaults
-        $def = str_replace('longtext DEFAULT [^,]*', 'longtext', $def);
-
+        // Strip extra type info
+        $def = preg_replace("/::(\w+)/", '', $def);
 
         // Add backticks to field names and concat with definition
         return "`{$field}` {$def}";
@@ -185,11 +168,11 @@ class CreateTable implements Statement
             if (preg_match('/PRIMARY KEY \((?<columns>.*)\)/', $def, $matches)) {
                 $cols = $matches['columns'];
                 $cols = str_replace('"', '`', $cols);
+
                 return "PRIMARY KEY ({$cols}),";
             }
         }
 
         return null;
-
     }
 }

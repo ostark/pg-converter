@@ -2,7 +2,6 @@
 
 namespace ostark\PgConverter\StatementBuilder;
 
-use ostark\PgConverter\Statement;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Error;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Skip;
@@ -17,39 +16,29 @@ class CreateIndex implements Statement
         // ...
     }
 
-
     public function make(): Result
     {
-        $pattern = '/CREATE INDEX (?<index_name>\w+) ON (?<schema_name>\w+).(?<table_name>\w+) USING (?<index_type>\w+) \((?<column_names>.*)\)/';
-        preg_match($pattern, $this->statement, $matches);
+        // CREATE UNIQUE INDEX "revisions_sourceId_num_unq_idx" ON public.revisions USING btree ("canonicalId", num);
+        // CREATE INDEX "fooo" ON public.sometable USING btree (id);
 
+        $pattern = '/(?<statement>CREATE UNIQUE INDEX|CREATE INDEX) (?<index_name>\w+) ON (?<schema_name>\w+).(?<table_name>\w+) USING (?<index_type>\w+) \((?<column_names>.*)\)/';
+
+        if (! preg_match($pattern, $this->statement, $matches)) {
+            return new Error($this->statement, ['Could not parse statement.']);
+
+        }
+
+        $statement = $matches['statement'];
         $index = $this->prepareIndex($matches['index_name']);
+        $type = $matches['index_type'];
         $table = $this->prepareTable($matches['table_name']);
         $columns = $this->prepareColumns($matches['column_names']);
 
-        if ($matches['index_type'] == 'btree') {
-
-            return new Success(statement: "CREATE INDEX $index ON $table ($columns)");
+        if ($type !== 'btree') {
+            return new Skip($this->statement, ["Index type: {$type} is not supported."]);
         }
 
-        if ($matches['index_type'] == 'gin') {
-
-            // CASE 1: gin -> full text index
-            // CASE 2: gin -> handle json indexes
-
-            return new Skip("-- GIN is not supported yet");
-        }
-
-
-        $sql =  "-- Skipping index: {$matches['index_name']} of table: {$matches['table_name']}";
-        $sql .= "-- because index type: {$matches['index_type']} is not supported.";
-
-        return new Skip($sql);
+        return new Success(statement: "$statement $index ON $table ($columns);");
 
     }
 }
-
-
-
-
-

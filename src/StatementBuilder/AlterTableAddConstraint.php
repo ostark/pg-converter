@@ -2,21 +2,20 @@
 
 namespace ostark\PgConverter\StatementBuilder;
 
-class AlterTableAddConstraint implements \ostark\PgConverter\Statement
+use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
+use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
+
+class AlterTableAddConstraint implements \ostark\PgConverter\StatementBuilder\Statement
 {
-    public function setTable(string $table): \ostark\PgConverter\Statement
+    public function __construct(protected string $statement)
     {
-        // TODO: Implement setTable() method.
+        if (! str_contains($statement, 'ALTER TABLE')) {
+            throw new \InvalidArgumentException('Invalid statement. Expected ALTER TABLE ...');
+        }
     }
 
-    public function toSql(): string
+    public function make(): Result
     {
-        return '';
-        // TODO: Implement toSql() method.
+        return new Success('-- TODO: ALTER TABLE ... ADD CONSTRAINT ...');
     }
-
-    // function that parses postgres alter table add constraint statement to mysql
-
-
-
 }

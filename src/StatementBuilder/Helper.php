@@ -18,5 +18,4 @@ trait Helper
     {
         return $raw;
     }
-
 }

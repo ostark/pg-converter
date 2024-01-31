@@ -4,13 +4,11 @@ namespace ostark\PgConverter\StatementBuilder\BuilderResult;
 
 interface Result
 {
-    function statement(): string;
+    public function statement(): string;
 
-    function table(): string;
+    public function errors(): array;
 
-    function errors(): array;
+    public function isError(): bool;
 
-    function isError(): bool;
-    
-    function isSuccess(): bool;
+    public function isSuccess(): bool;
 }

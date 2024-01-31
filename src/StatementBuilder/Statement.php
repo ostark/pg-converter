@@ -1,6 +1,6 @@
 <?php
 
-namespace ostark\PgConverter;
+namespace ostark\PgConverter\StatementBuilder;
 
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 

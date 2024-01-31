@@ -2,7 +2,8 @@
 
 namespace ostark\PgConverter\StatementBuilder;
 
-use ostark\PgConverter\Statement;
+use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
+use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
 
 class InsertInto implements Statement
 {
@@ -11,15 +12,8 @@ class InsertInto implements Statement
         // ...
     }
 
-    public function setTable(string $table): Statement
+    public function make(): Result
     {
-        // TODO: Implement setTable() method.
-    }
-
-    public function toSql(): string
-    {
-        return '';
-
-        return 'MODIFIED:'.$this->statement.PHP_EOL;
+        return new Success('-- TODO: INSERT INTO ...');
     }
 }
