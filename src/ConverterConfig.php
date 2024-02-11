@@ -18,13 +18,11 @@ class ConverterConfig
 
     public const DEFAULT_CHARSET = 'utf8';
 
-
-
     public function __construct(public string $inputFile, public string $outputFile, private array $options = [])
     {
 
-        $inputFile = (str_starts_with($inputFile, '/') ? $inputFile : getcwd() . '/' . $inputFile);
-        $outputFile = (str_starts_with($outputFile, '/') ? $outputFile : getcwd() . '/' . $outputFile);
+        $inputFile = (str_starts_with($inputFile, '/') ? $inputFile : getcwd().'/'.$inputFile);
+        $outputFile = (str_starts_with($outputFile, '/') ? $outputFile : getcwd().'/'.$outputFile);
 
         if (! file_exists($inputFile)) {
             throw new \InvalidArgumentException("Input file does not exist: {$inputFile}");
@@ -85,8 +83,6 @@ class ConverterConfig
         return $this->options[self::OPTION_CHARSET] ?? self::DEFAULT_CHARSET;
     }
 
-
-
     private function setInputFilter(string $regex): void
     {
         // Wrap regex pattern with delimiters
@@ -132,6 +128,4 @@ class ConverterConfig
     {
         $this->options[self::OPTION_ENGINE] = $charset;
     }
-
-
 }

@@ -67,6 +67,7 @@ class ConvertCommand extends \Symfony\Component\Console\Command\Command
         print_r([
             'ERRORS' => $converter->getErrors(),
             'UNKNOWN' => array_slice($converter->getUnknownStatements(), 0, 50),
+            'UNSUPPORTED' => array_slice($converter->getUnsupportedStatements(), 0, 50),
             'LINES_WRITTEN' => $lineCount,
         ]);
 

@@ -31,7 +31,6 @@ class InsertInto implements Statement
         // other special columns that differ in mysql: dateCreated, dateUpdated, uid
         // what about the "E" in the first line?
 
-
         // parse copy statement, count columns, create insert statement
         $lines = explode(PHP_EOL, $copyStatement);
         $head = array_shift($lines);
@@ -45,7 +44,6 @@ class InsertInto implements Statement
         foreach ($lines as $valueLine) {
 
         }
-
 
         $columns = explode(self::COPY_COLUMN_DELIMITER, $lines[0]);
         $columns = array_map(fn ($column) => trim($column, '"'), $columns);
@@ -61,7 +59,6 @@ class InsertInto implements Statement
         $values = implode(', ', $values);
 
         $insertStatement = "INSERT INTO `usergroups` ({$columns}) VALUES {$values};";
-
 
         return new Success('-- TODO: INSERT INTO ...');
     }

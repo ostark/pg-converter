@@ -3,7 +3,6 @@
 namespace ostark\PgConverter;
 
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
-use ostark\PgConverter\StatementBuilder\Statement;
 
 class MultilineStatement
 {
@@ -14,8 +13,6 @@ class MultilineStatement
     private string $stopCharacter = '';
 
     private ?\Closure $nextCallback;
-
-
 
     public function add(string $line): void
     {
@@ -52,7 +49,6 @@ class MultilineStatement
         return $this->isCollecting;
     }
 
-
     public function setNextHandler(\Closure $nextCallback): void
     {
         $this->nextCallback = $nextCallback;
@@ -84,6 +80,5 @@ class MultilineStatement
         $this->isCollecting = false;
         $this->stopCharacter = '';
         $this->nextCallback = null;
-        $this->name = null;
     }
 }

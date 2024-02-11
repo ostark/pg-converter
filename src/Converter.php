@@ -5,7 +5,6 @@ namespace ostark\PgConverter;
 use ostark\PgConverter\StatementBuilder\AlterTableAddConstraint;
 use ostark\PgConverter\StatementBuilder\AlterTableAutoIncrement;
 use ostark\PgConverter\StatementBuilder\AlterTableSetDefault;
-use ostark\PgConverter\StatementBuilder\BuilderResult\Error;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Skip;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
@@ -23,7 +22,7 @@ class Converter
     private array $unknownStatements = [];
 
     public function __construct(
-        private \Iterator       $lines,
+        private \Iterator $lines,
         private ConverterConfig $config)
     {
         //
@@ -42,6 +41,7 @@ class Converter
 
             if ($this->isUnsupported($line)) {
                 $this->unsupportedStatements[] = $line;
+
                 continue;
             }
 
@@ -65,7 +65,7 @@ class Converter
             if (str_starts_with($line, 'COPY') && str_ends_with(rtrim($line), 'FROM stdin;')) {
                 $builder = new MultilineStatement();
                 $builder->setStopCharacter("\.");
-                $builder->setNextHandler( fn($sql): Result => (new InsertInto($sql))->make() );
+                $builder->setNextHandler(fn ($sql): Result => (new InsertInto($sql))->make());
 
                 $builder->add($line);
 
@@ -77,11 +77,10 @@ class Converter
 
             // when using pg_dump with --inserts we get
 
-
             if (str_starts_with($line, 'CREATE TABLE')) {
                 $builder = new MultilineStatement();
                 $builder->setStopCharacter(');');
-                $builder->setNextHandler( fn($sql): Result => (new CreateTable($sql))->make() );
+                $builder->setNextHandler(fn ($sql): Result => (new CreateTable($sql, $this->config))->make());
 
                 $builder->add($line);
 
@@ -91,7 +90,7 @@ class Converter
             if (str_starts_with($line, 'CREATE SEQUENCE')) {
                 $builder = new MultilineStatement();
                 $builder->setStopCharacter('CACHE 1;');
-                $builder->setNextHandler( fn($sql): Result => (new AlterTableAutoIncrement($sql))->make() );
+                $builder->setNextHandler(fn ($sql): Result => (new AlterTableAutoIncrement($sql))->make());
 
                 $builder->add($line);
 
@@ -140,6 +139,10 @@ class Converter
         return $this->unknownStatements;
     }
 
+    public function getUnsupportedStatements(): array
+    {
+        return $this->unsupportedStatements;
+    }
 
     private function shouldSkip(string $sql): bool
     {
@@ -167,15 +170,14 @@ class Converter
         return false;
     }
 
-
-    private function handleResult(Result $result): ?string
+    private function handleResult(Result $result): string
     {
         // Transformed statement
         $statement = $result->statement();
 
         // Happy path
         if ($result instanceof Success) {
-            return $statement . PHP_EOL;
+            return $statement.PHP_EOL;
         }
 
         // Collect info about non-successful results
@@ -184,7 +186,8 @@ class Converter
         // Return sql comment
         if ($this->config->verboseComments()) {
             $comment = "-- Skipped: $statement\n";
-            $comment .= array_map(fn($e) => "-- $e\n", $result->errors());
+            $comment .= implode(PHP_EOL, array_map(fn ($e) => "-- $e\n", $result->errors()));
+
             return $comment;
         }
 

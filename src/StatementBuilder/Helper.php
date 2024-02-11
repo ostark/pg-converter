@@ -21,15 +21,14 @@ trait Helper
     protected function prepareColumns(string $raw): string
     {
         $list = explode(',', $raw);
-        $list = array_map(function($column) {
+        $list = array_map(function ($column) {
             $column = trim($column);
             $column = str_replace('"', '', $column);
             $column = replace_if_match(['/\((.*)\)/' => '$1'], $column);
+
             return "`$column`";
         }, $list);
 
         return implode(', ', $list);
     }
-
-
 }

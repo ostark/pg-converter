@@ -33,6 +33,4 @@ class FileWriter
     {
         return $this->store('a');
     }
-
-
 }
