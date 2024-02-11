@@ -27,6 +27,8 @@ class ConvertCommand extends \Symfony\Component\Console\Command\Command
                     new InputOption(ConverterConfig::OPTION_INPUT_FILTER, 'i', InputOption::VALUE_OPTIONAL, 'Regex pattern to filter input lines'),
                     new InputOption(ConverterConfig::OPTION_APPEND_STRING, 's', InputOption::VALUE_OPTIONAL, 'Append string to output file'),
                     new InputOption(ConverterConfig::OPTION_APPEND_FILE, 'f', InputOption::VALUE_OPTIONAL, 'Append file to output file'),
+                    new InputOption(ConverterConfig::OPTION_ENGINE, 'e', InputOption::VALUE_OPTIONAL, 'MySQL Engine', ConverterConfig::DEFAULT_ENGINE),
+                    new InputOption(ConverterConfig::OPTION_CHARSET, 'c', InputOption::VALUE_OPTIONAL, 'MySQL Charset', ConverterConfig::DEFAULT_CHARSET),
                 ])
             );
     }
@@ -52,13 +54,13 @@ class ConvertCommand extends \Symfony\Component\Console\Command\Command
         // Add extra sql statements to the output file
         if ($config->getAppendString()) {
             $lines = new \ArrayIterator([$config->getAppendString()]);
-            $lineCount += (new FileWriter($config->outputFile, $lines))->store();
+            $lineCount += (new FileWriter($config->outputFile, $lines))->append();
         }
 
         // Add extra sql statements from a file to the output file
         if ($config->getAppendFile()) {
             $lines = (new FileReader($config->getAppendFile()))->getLines();
-            $lineCount += (new FileWriter($config->outputFile, $lines))->store();
+            $lineCount += (new FileWriter($config->outputFile, $lines))->append();
         }
 
         // Output some stats

@@ -5,7 +5,7 @@ namespace ostark\PgConverter\StatementBuilder;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
 
-class AlterTableAddConstraint implements \ostark\PgConverter\StatementBuilder\Statement
+class AlterTableAddConstraint implements Statement
 {
     public function __construct(protected string $statement)
     {

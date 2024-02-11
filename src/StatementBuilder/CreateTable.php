@@ -2,6 +2,7 @@
 
 namespace ostark\PgConverter\StatementBuilder;
 
+use ostark\PgConverter\ConverterConfig;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Error;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
@@ -32,12 +33,14 @@ class CreateTable implements Statement
 
     private string $table;
 
-    public function __construct(protected string $statement)
-    {
+    public function __construct(
+        protected string $statement,
+        protected ConverterConfig $config
+    ) {
         $this->lines = explode(PHP_EOL, $statement);
 
         if (count($this->lines) <= 3) {
-            throw new \InvalidArgumentException('Invalid statement. Expected at least 3 lines');
+            throw new \InvalidArgumentException('Invalid statement. Expected at least 4 lines');
         }
 
         $this->table = $this->extractTableName($this->lines[0]);
@@ -61,7 +64,7 @@ class CreateTable implements Statement
 
         $start = "CREATE TABLE {$this->table} (\n";
         $fieldDefinitions = rtrim(implode(PHP_EOL, $lines), ',');
-        $end = "\n);";
+        $end = "\n) ENGINE={$this->config->getEngine()} DEFAULT CHARACTER SET {$this->config->getCharset()}";
 
         return new Success($start.$fieldDefinitions.$end);
     }

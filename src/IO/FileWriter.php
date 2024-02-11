@@ -9,10 +9,10 @@ class FileWriter
         // ...
     }
 
-    public function store(): int
+    public function store(string $mode = 'w'): int
     {
         $lineCount = 0;
-        if (! $handle = fopen($this->file, 'w')) {
+        if (! $handle = fopen($this->file, $mode)) {
             throw new \Exception("Unable to write file: $this->file");
         }
 
@@ -28,4 +28,11 @@ class FileWriter
 
         return $lineCount;
     }
+
+    public function append(): int
+    {
+        return $this->store('a');
+    }
+
+
 }

@@ -4,20 +4,26 @@ namespace ostark\PgConverter;
 
 use ostark\PgConverter\StatementBuilder\AlterTableAddConstraint;
 use ostark\PgConverter\StatementBuilder\AlterTableAutoIncrement;
+use ostark\PgConverter\StatementBuilder\AlterTableSetDefault;
+use ostark\PgConverter\StatementBuilder\BuilderResult\Error;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Skip;
+use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
 use ostark\PgConverter\StatementBuilder\CreateIndex;
 use ostark\PgConverter\StatementBuilder\CreateTable;
 use ostark\PgConverter\StatementBuilder\InsertInto;
+use ostark\PgConverter\StatementBuilder\Statement;
 
 class Converter
 {
     private array $errors = [];
 
+    private array $unsupportedStatements = [];
+
     private array $unknownStatements = [];
 
     public function __construct(
-        private \Iterator $lines,
+        private \Iterator       $lines,
         private ConverterConfig $config)
     {
         //
@@ -25,18 +31,24 @@ class Converter
 
     public function convert(): \Iterator
     {
-        $builder = new GenericMultiLine();
+        $builder = new MultilineStatement();
 
         /** @var string $line */
         foreach ($this->lines as $line) {
 
+            if ($this->shouldSkip($line)) {
+                continue;
+            }
+
+            if ($this->isUnsupported($line)) {
+                $this->unsupportedStatements[] = $line;
+                continue;
+            }
+
+            // Multi-line handling
             if ($builder->isLastMultiline($line)) {
                 $builder->add($line);
-                $statement = $builder->toString();
-                $name = $builder->getName();
-
-                yield $this->convertStatement($name, $statement);
-
+                yield $this->handleResult($builder->next());
                 $builder->reset();
 
                 continue;
@@ -50,102 +62,69 @@ class Converter
 
             // Below we detect different the sql statements
             // that spawn across multiple lines
-
             if (str_starts_with($line, 'COPY') && str_ends_with(rtrim($line), 'FROM stdin;')) {
-                $builder = new GenericMultiLine('COPY');
+                $builder = new MultilineStatement();
                 $builder->setStopCharacter("\.");
+                $builder->setNextHandler( fn($sql): Result => (new InsertInto($sql))->make() );
+
                 $builder->add($line);
 
                 continue;
             }
 
+            // when using pg_dump with --column-inserts we get
+            // INSERT INTO ... (col1, col2) VALUES (val1, val2)
+
+            // when using pg_dump with --inserts we get
+
+
             if (str_starts_with($line, 'CREATE TABLE')) {
-                $builder = new GenericMultiLine('CREATE_TABLE');
+                $builder = new MultilineStatement();
                 $builder->setStopCharacter(');');
+                $builder->setNextHandler( fn($sql): Result => (new CreateTable($sql))->make() );
+
                 $builder->add($line);
 
                 continue;
             }
 
             if (str_starts_with($line, 'CREATE SEQUENCE')) {
-                $builder = new GenericMultiLine('CREATE_SEQUENCE');
+                $builder = new MultilineStatement();
                 $builder->setStopCharacter('CACHE 1;');
+                $builder->setNextHandler( fn($sql): Result => (new AlterTableAutoIncrement($sql))->make() );
+
                 $builder->add($line);
 
                 continue;
             }
 
-            // CREATE UNIQUE INDEX "revisions_sourceId_num_unq_idx" ON public.revisions USING btree ("canonicalId", num);
-            if (str_starts_with($line, 'CREATE UNIQUE INDEX') || str_starts_with($line, 'CREATE INDEX')) {
-                yield $this->convertStatement('CREATE_INDEX', $line);
-
-                continue;
-            }
-
+            // ALTER TABLE ONLY can contain one or two lines
             if (str_starts_with($line, 'ALTER TABLE ONLY')) {
 
                 $one = $line;
                 $this->lines->next();
                 $two = trim($this->lines->current());
 
-                if (strstr($one, 'ALTER COLUMN')) {
-                    yield $this->convertStatement('ALTER_COLUMN', $one);
-
-                    continue;
+                // ALTER COLUMN SET DEFAULT nextval('')
+                if (str_contains($one, 'SET DEFAULT')) {
+                    yield $this->handleResult((new AlterTableSetDefault($one))->make());
                 }
 
+                // PRIMARY KEY, UNIQUE, FOREIGN KEY ...
                 if (str_starts_with($two, 'ADD CONSTRAINT')) {
-                    // PRIMARY KEY, UNIQUE, FOREIGN KEY,
-                    yield $this->convertStatement('ADD_CONSTRAINT', "$one $two");
+                    yield $this->handleResult((new AlterTableAddConstraint("$one $two"))->make());
                 }
 
                 continue;
             }
 
-            if (str_starts_with($line, 'ALTER TABLE IF EXISTS')) {
-                continue;
-            }
-            if (str_starts_with($line, 'DROP INDEX IF EXISTS')) {
+            if (str_starts_with($line, 'CREATE UNIQUE INDEX') || str_starts_with($line, 'CREATE INDEX')) {
+                yield $this->handleResult((new CreateIndex($line))->make());
+
                 continue;
             }
 
-            if (str_starts_with($line, 'DROP SEQUENCE IF EXISTS')) {
-                continue;
-            }
-
-            if (str_starts_with($line, 'ALTER SEQUENCE')) {
-                // Deferred? (auto increment)
-                continue;
-            }
-            if (str_starts_with($line, 'DROP TABLE IF EXISTS')) {
-                continue;
-            }
-            //if (str_starts_with($line, 'ALTER TABLE ONLY') && strstr($line, '::regclass)')) {
-            //    continue;
-            //}
-            if (str_starts_with($line, 'SELECT pg_catalog')) {
-                continue;
-            }
-            if (str_starts_with($line, 'SET ')) {
-                continue;
-            }
-            if (str_starts_with($line, 'CREATE SCHEMA')) {
-                continue;
-            }
-            if (str_starts_with($line, 'DROP SCHEMA')) {
-                continue;
-            }
-            if (str_starts_with($line, 'COMMENT ON SCHEMA')) {
-                continue;
-            }
-
-            // Lines to ignore
-            if (str_starts_with($line, '--') || trim($line) === '') {
-                // Skip, just a sql comment
-                continue;
-            }
-
-            // No condition matches
+            // Collect unknown statements for debugging
             $this->unknownStatements[] = $line;
         }
 
@@ -161,21 +140,6 @@ class Converter
         return $this->unknownStatements;
     }
 
-    private function convertStatement(?string $type, string $sql): Result
-    {
-        if ($this->shouldSkip($sql)) {
-            return new Skip($sql);
-        }
-
-        return match ($type) {
-            'CREATE_TABLE' => (new CreateTable($sql))->make(),
-            'CREATE_INDEX' => (new CreateIndex($sql))->make(),
-            'CREATE_SEQUENCE' => (new AlterTableAutoIncrement($sql))->make(),
-            'ADD_CONSTRAINT' => (new AlterTableAddConstraint($sql))->make(),
-            'COPY' => (new InsertInto($sql))->make(),
-            default => throw new \Exception("Unsupported Statement: $type"),
-        };
-    }
 
     private function shouldSkip(string $sql): bool
     {
@@ -184,5 +148,47 @@ class Converter
         }
 
         return false;
+    }
+
+    private function isUnsupported(string $line)
+    {
+        foreach (Statement::UNSUPPORTED as $unsupported) {
+            if (str_starts_with($line, $unsupported)) {
+                return true;
+            }
+        }
+
+        // Lines to ignore
+        if (str_starts_with($line, '--') || trim($line) === '') {
+            // Skip, just a sql comment
+            return true;
+        }
+
+        return false;
+    }
+
+
+    private function handleResult(Result $result): ?string
+    {
+        // Transformed statement
+        $statement = $result->statement();
+
+        // Happy path
+        if ($result instanceof Success) {
+            return $statement . PHP_EOL;
+        }
+
+        // Collect info about non-successful results
+        $this->unsupportedStatements[] = $statement;
+
+        // Return sql comment
+        if ($this->config->verboseComments()) {
+            $comment = "-- Skipped: $statement\n";
+            $comment .= array_map(fn($e) => "-- $e\n", $result->errors());
+            return $comment;
+        }
+
+        return '-- \n';
+
     }
 }

@@ -10,13 +10,25 @@ class ConverterConfig
 
     public const OPTION_APPEND_FILE = 'append-file';
 
+    public const OPTION_ENGINE = 'engine';
+
+    public const DEFAULT_ENGINE = 'InnoDB';
+
+    public const OPTION_CHARSET = 'charset';
+
+    public const DEFAULT_CHARSET = 'utf8';
+
+
+
     public function __construct(public string $inputFile, public string $outputFile, private array $options = [])
     {
+
+        $inputFile = (str_starts_with($inputFile, '/') ? $inputFile : getcwd() . '/' . $inputFile);
+        $outputFile = (str_starts_with($outputFile, '/') ? $outputFile : getcwd() . '/' . $outputFile);
+
         if (! file_exists($inputFile)) {
             throw new \InvalidArgumentException("Input file does not exist: {$inputFile}");
         }
-
-        $outputFile = realpath($outputFile) ?: '';
 
         if (! is_dir(dirname($outputFile))) {
             throw new \InvalidArgumentException("Output directory does not exist: {$outputFile}");
@@ -34,6 +46,18 @@ class ConverterConfig
             $this->setAppendFile($options[self::OPTION_APPEND_FILE]);
         }
 
+        if (isset($options[self::OPTION_ENGINE])) {
+            $this->setEngine($options[self::OPTION_ENGINE]);
+        }
+
+        if (isset($options[self::OPTION_CHARSET])) {
+            $this->setCharset($options[self::OPTION_CHARSET]);
+        }
+    }
+
+    public function verboseComments(): bool
+    {
+        return true;
     }
 
     public function getInputFilter(): ?string
@@ -50,6 +74,18 @@ class ConverterConfig
     {
         return $this->options[self::OPTION_APPEND_FILE] ?? null;
     }
+
+    public function getEngine(): string
+    {
+        return $this->options[self::OPTION_ENGINE] ?? self::DEFAULT_ENGINE;
+    }
+
+    public function getCharset(): string
+    {
+        return $this->options[self::OPTION_CHARSET] ?? self::DEFAULT_CHARSET;
+    }
+
+
 
     private function setInputFilter(string $regex): void
     {
@@ -86,4 +122,16 @@ class ConverterConfig
 
         $this->options[self::OPTION_APPEND_FILE] = $file;
     }
+
+    private function setEngine(string $engine): void
+    {
+        $this->options[self::OPTION_CHARSET] = $engine;
+    }
+
+    private function setCharset($charset): void
+    {
+        $this->options[self::OPTION_ENGINE] = $charset;
+    }
+
+
 }

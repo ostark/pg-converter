@@ -2,7 +2,10 @@
 
 namespace ostark\PgConverter;
 
-class GenericMultiLine
+use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
+use ostark\PgConverter\StatementBuilder\Statement;
+
+class MultilineStatement
 {
     private array $lines = [];
 
@@ -10,15 +13,9 @@ class GenericMultiLine
 
     private string $stopCharacter = '';
 
-    public function __construct(public ?string $name = null)
-    {
-        // ...
-    }
+    private ?\Closure $nextCallback;
 
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
+
 
     public function add(string $line): void
     {
@@ -55,9 +52,30 @@ class GenericMultiLine
         return $this->isCollecting;
     }
 
-    public function getName(): ?string
+
+    public function setNextHandler(\Closure $nextCallback): void
     {
-        return $this->name;
+        $this->nextCallback = $nextCallback;
+    }
+
+    public function next(): Result
+    {
+
+        if ($this->nextCallback === null) {
+            throw new \RuntimeException('No next handler set');
+        }
+
+        $result = ($this->nextCallback)($this->toString());
+
+        if ($result instanceof Result) {
+            return $result;
+        }
+
+        throw new \RuntimeException(sprintf(
+            'Callback did not return an instance of Result. Got "%s" instead.',
+            gettype($result)
+        ));
+
     }
 
     public function reset(): void
@@ -65,6 +83,7 @@ class GenericMultiLine
         $this->lines = [];
         $this->isCollecting = false;
         $this->stopCharacter = '';
+        $this->nextCallback = null;
         $this->name = null;
     }
 }
