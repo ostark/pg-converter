@@ -4,7 +4,6 @@ namespace ostark\PgConverter\StatementBuilder;
 
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
-use function PHPUnit\Framework\matches;
 
 class InsertInto implements Statement
 {
@@ -37,7 +36,7 @@ class InsertInto implements Statement
             $values = explode(self::COPY_COLUMN_DELIMITER, $valueLine);
             $values = $this->prepareValues($values);
 
-            $line = array_map(fn ($v) => implode(', ', $v), $values);
+            $line = implode(', ', $values);
             $line = "({$line})";
             $lines[$key] = $line;
         }
@@ -49,7 +48,7 @@ class InsertInto implements Statement
 
     private function prepareValues(array $values): array
     {
-        $values = array_map(fn ($v) =>  trim($v, '"'), $values);
+        $values = array_map(fn ($v) => trim($v, '"'), $values);
 
         // fix special values
         foreach ($values as $key => $value) {
