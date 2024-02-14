@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 it('should convert a create table statement', function () {
 
     $input = <<<'PGSQL'

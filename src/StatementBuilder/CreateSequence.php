@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter\StatementBuilder;
 
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
@@ -9,8 +11,7 @@ class CreateSequence implements Statement
 {
     public function __construct(
         private string $statement
-    ) {
-    }
+    ) {}
 
     public function make(): Result
     {

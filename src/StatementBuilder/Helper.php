@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter\StatementBuilder;
 
 use function ostark\PgConverter\String\replace_if_match;

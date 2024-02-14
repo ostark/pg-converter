@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter\Command;
 
 use ostark\PgConverter\Converter;
@@ -14,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ConvertCommand extends \Symfony\Component\Console\Command\Command
 {
-    const NAME = 'convert';
+    public const NAME = 'convert';
 
     protected function configure(): void
     {

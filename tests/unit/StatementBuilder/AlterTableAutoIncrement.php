@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use ostark\PgConverter\StatementBuilder\AlterTableAutoIncrement;
 
 it('throws an exception if not ALTER SEQUENCE statement', function () {

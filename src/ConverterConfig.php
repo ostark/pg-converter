@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter;
 
 class ConverterConfig
@@ -21,8 +23,8 @@ class ConverterConfig
     public function __construct(public string $inputFile, public string $outputFile, private array $options = [])
     {
 
-        $inputFile = (str_starts_with($inputFile, '/') ? $inputFile : getcwd().'/'.$inputFile);
-        $outputFile = (str_starts_with($outputFile, '/') ? $outputFile : getcwd().'/'.$outputFile);
+        $inputFile = (str_starts_with($inputFile, '/') ? $inputFile : getcwd() . '/' . $inputFile);
+        $outputFile = (str_starts_with($outputFile, '/') ? $outputFile : getcwd() . '/' . $outputFile);
 
         if (! file_exists($inputFile)) {
             throw new \InvalidArgumentException("Input file does not exist: {$inputFile}");

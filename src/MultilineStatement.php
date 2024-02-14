@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter;
 
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;

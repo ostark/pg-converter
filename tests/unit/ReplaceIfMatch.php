@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use function ostark\PgConverter\String\replace_if_match;
 
 it('should replace multi line input', function () {

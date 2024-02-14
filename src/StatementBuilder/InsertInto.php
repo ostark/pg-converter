@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter\StatementBuilder;
 
 use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
@@ -7,9 +9,9 @@ use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
 
 class InsertInto implements Statement
 {
-    private const COPY_COLUMN_DELIMITER = "\t";
-
     use Helper;
+
+    private const COPY_COLUMN_DELIMITER = "\t";
 
     public function __construct(protected string $statement)
     {
@@ -48,7 +50,7 @@ class InsertInto implements Statement
 
     private function prepareValues(array $values): array
     {
-        $values = array_map(fn ($v) => trim($v, '"'), $values);
+        $values = array_map(fn($v) => trim($v, '"'), $values);
 
         // fix special values
         foreach ($values as $key => $value) {

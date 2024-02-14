@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter\StatementBuilder\BuilderResult;
 
 abstract class AbstractResult
@@ -7,8 +9,7 @@ abstract class AbstractResult
     public function __construct(
         protected string $statement,
         protected array $errors = []
-    ) {
-    }
+    ) {}
 
     public function statement(): string
     {

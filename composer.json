@@ -41,8 +41,8 @@
         }
     },
     "scripts": {
-        "lint": "pint -v",
-        "test:lint": "pint --test -v",
+        "lint": "pint -v --config pint.json",
+        "test:lint": "pint --test -v --config pint.json",
         "test:types": "phpstan analyse --ansi",
         "test:unit": "pest --colors=always",
         "test": [

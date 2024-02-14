@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter\StatementBuilder;
 
 use ostark\PgConverter\ConverterConfig;
@@ -52,7 +54,7 @@ class CreateTable implements Statement
 
     public function make(): Result
     {
-        $lines = array_map(fn ($line) => $this->convertLine($line), $this->lines);
+        $lines = array_map(fn($line) => $this->convertLine($line), $this->lines);
         $lines = array_filter($lines);
 
         if (count($lines) === 0) {
@@ -60,13 +62,13 @@ class CreateTable implements Statement
         }
 
         // Indent lines
-        $lines = array_map(fn ($line) => "  {$line}", $lines);
+        $lines = array_map(fn($line) => "  {$line}", $lines);
 
         $start = "CREATE TABLE {$this->table} (\n";
         $fieldDefinitions = rtrim(implode(PHP_EOL, $lines), ',');
         $end = "\n) ENGINE={$this->config->getEngine()} DEFAULT CHARACTER SET {$this->config->getCharset()}";
 
-        return new Success($start.$fieldDefinitions.$end);
+        return new Success($start . $fieldDefinitions . $end);
     }
 
     /**

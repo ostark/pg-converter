@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 it('should use default values if option is not set', function () {
     $options = [];
     $config = new \ostark\PgConverter\ConverterConfig(

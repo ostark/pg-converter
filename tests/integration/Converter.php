@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 it('should convert CREATE TABLE statement with indexes', function () {
     $this->assertTrue(true);
 
@@ -17,7 +19,7 @@ it('should convert CREATE TABLE statement with indexes', function () {
     $convertedLines = $converter->convert();
 
     foreach ($convertedLines as $line) {
-        echo $line.PHP_EOL;
+        echo $line . PHP_EOL;
     }
 
 });

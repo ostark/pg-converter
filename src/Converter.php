@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace ostark\PgConverter;
 
 use ostark\PgConverter\StatementBuilder\AlterTableAddConstraint;
@@ -23,8 +25,8 @@ class Converter
 
     public function __construct(
         private \Iterator $lines,
-        private ConverterConfig $config)
-    {
+        private ConverterConfig $config
+    ) {
         //
     }
 
@@ -65,7 +67,7 @@ class Converter
             if (str_starts_with($line, 'COPY') && str_ends_with(rtrim($line), 'FROM stdin;')) {
                 $builder = new MultilineStatement();
                 $builder->setStopCharacter("\.");
-                $builder->setNextHandler(fn ($sql): Result => (new InsertInto($sql))->make());
+                $builder->setNextHandler(fn($sql): Result => (new InsertInto($sql))->make());
 
                 $builder->add($line);
 
@@ -80,7 +82,7 @@ class Converter
             if (str_starts_with($line, 'CREATE TABLE')) {
                 $builder = new MultilineStatement();
                 $builder->setStopCharacter(');');
-                $builder->setNextHandler(fn ($sql): Result => (new CreateTable($sql, $this->config))->make());
+                $builder->setNextHandler(fn($sql): Result => (new CreateTable($sql, $this->config))->make());
 
                 $builder->add($line);
 
@@ -90,7 +92,7 @@ class Converter
             if (str_starts_with($line, 'CREATE SEQUENCE')) {
                 $builder = new MultilineStatement();
                 $builder->setStopCharacter('CACHE 1;');
-                $builder->setNextHandler(fn ($sql): Result => (new AlterTableAutoIncrement($sql))->make());
+                $builder->setNextHandler(fn($sql): Result => (new AlterTableAutoIncrement($sql))->make());
 
                 $builder->add($line);
 
@@ -177,7 +179,7 @@ class Converter
 
         // Happy path
         if ($result instanceof Success) {
-            return $statement.PHP_EOL;
+            return $statement . PHP_EOL;
         }
 
         // Collect info about non-successful results
@@ -186,7 +188,7 @@ class Converter
         // Return sql comment
         if ($this->config->verboseComments()) {
             $comment = "-- Skipped: $statement\n";
-            $comment .= implode(PHP_EOL, array_map(fn ($e) => "-- $e\n", $result->errors()));
+            $comment .= implode(PHP_EOL, array_map(fn($e) => "-- $e\n", $result->errors()));
 
             return $comment;
         }
