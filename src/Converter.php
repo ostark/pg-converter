@@ -32,6 +32,14 @@ class Converter
 
     public function convert(): \Iterator
     {
+        yield $this->header();
+        yield from $this->convertLines();
+        yield $this->footer();
+    }
+
+
+    protected function convertLines(): \Iterator
+    {
         $builder = new MultilineStatement();
 
         /** @var string $line */
@@ -155,7 +163,7 @@ class Converter
         return false;
     }
 
-    private function isUnsupported(string $line)
+    protected function isUnsupported(string $line)
     {
         foreach (Statement::UNSUPPORTED as $unsupported) {
             if (str_starts_with($line, $unsupported)) {
@@ -172,7 +180,7 @@ class Converter
         return false;
     }
 
-    private function handleResult(Result $result): string
+    protected function handleResult(Result $result): string
     {
         // Transformed statement
         $statement = $result->statement();
@@ -195,5 +203,33 @@ class Converter
 
         return '-- \n';
 
+    }
+
+    protected function header(): string
+    {
+        $header = "--\n";
+        $header .= "-- Converted with ostark/PgConverter\n";
+        $header .= "--\n";
+        $header .= "-- Source: {$this->config->inputFile}\n";
+        $header .= "-- Target: {$this->config->outputFile}\n";
+        $header .= "-- Date: " . date('Y-m-d H:i:s') . "\n";
+        $header .= "--\n";
+        $header .= "-- 500 MB packets (to allow bigger INSERTs)\n";
+        $header .= "SET GLOBAL max_allowed_packet=524288000;\n";
+        $header .= "--\n";
+        $header .= "-- Disable foreign key checks\n";
+        $header .= "SET foreign_key_checks = 0;\n";
+        $header .= "--\n";
+        $header .= "-- Set default charset\n";
+        $header .= "SET NAMES '{$this->config->getCharset()}';\n";
+        $header .= "--\n";
+        $header .= "--\n";
+
+        return $header;
+    }
+
+    protected function footer(): string
+    {
+        return "\n-- END --\n";
     }
 }

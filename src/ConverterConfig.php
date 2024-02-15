@@ -18,7 +18,7 @@ class ConverterConfig
 
     public const OPTION_CHARSET = 'charset';
 
-    public const DEFAULT_CHARSET = 'utf8';
+    public const DEFAULT_CHARSET = 'utf8'; // utf8mb4
 
     public function __construct(public string $inputFile, public string $outputFile, private array $options = [])
     {
