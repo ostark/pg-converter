@@ -14,7 +14,7 @@ class AlterTableAutoIncrement implements Statement
     public function __construct(protected string $statement)
     {
         if (! str_contains($statement, 'ALTER SEQUENCE')) {
-            throw new InvalidArgumentException('Invalid statement. Expected ALTER SEQUENCE ...');
+            throw new InvalidArgumentException('Invalid statement. Expected ALTER SEQUENCE ..., got: ' . $statement);
         }
     }
 

@@ -10,7 +10,7 @@ use ostark\PgConverter\StatementBuilder\BuilderResult\Skip;
 class CreateSequence implements Statement
 {
     public function __construct(
-        private string $statement
+        private readonly string $statement
     ) {}
 
     public function make(): Result

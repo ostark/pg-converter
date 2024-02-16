@@ -11,6 +11,7 @@ use ostark\PgConverter\StatementBuilder\BuilderResult\Result;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Skip;
 use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
 use ostark\PgConverter\StatementBuilder\CreateIndex;
+use ostark\PgConverter\StatementBuilder\CreateSequence;
 use ostark\PgConverter\StatementBuilder\CreateTable;
 use ostark\PgConverter\StatementBuilder\InsertInto;
 use ostark\PgConverter\StatementBuilder\Statement;
@@ -38,7 +39,7 @@ class Converter
     }
 
 
-    protected function convertLines(): \Iterator
+    public function convertLines(): \Iterator
     {
         $builder = new MultilineStatement();
 
@@ -97,15 +98,17 @@ class Converter
                 continue;
             }
 
+
             if (str_starts_with($line, 'CREATE SEQUENCE')) {
                 $builder = new MultilineStatement();
                 $builder->setStopCharacter('CACHE 1;');
-                $builder->setNextHandler(fn($sql): Result => (new AlterTableAutoIncrement($sql))->make());
-
+                $builder->setNextHandler(fn($sql): Result => (new CreateSequence($sql))->make());
                 $builder->add($line);
 
                 continue;
             }
+
+
 
             // ALTER TABLE ONLY can contain one or two lines
             if (str_starts_with($line, 'ALTER TABLE ONLY')) {
@@ -129,6 +132,12 @@ class Converter
 
             if (str_starts_with($line, 'CREATE UNIQUE INDEX') || str_starts_with($line, 'CREATE INDEX')) {
                 yield $this->handleResult((new CreateIndex($line))->make());
+
+                continue;
+            }
+
+            if (str_starts_with($line, 'ALTER SEQUENCE')) {
+                yield $this->handleResult((new AlterTableAutoIncrement($line))->make());
 
                 continue;
             }
@@ -187,22 +196,23 @@ class Converter
 
         // Happy path
         if ($result instanceof Success) {
-            return $statement . PHP_EOL;
+            return  $statement . PHP_EOL . PHP_EOL;
         }
 
         // Collect info about non-successful results
         $this->unsupportedStatements[] = $statement;
 
-        // Return sql comment
+        // Return statement and errors as sql comment
         if ($this->config->verboseComments()) {
-            $comment = "-- Skipped: $statement\n";
-            $comment .= implode(PHP_EOL, array_map(fn($e) => "-- $e\n", $result->errors()));
+            $comment =  '-- SKIPPED: ' . PHP_EOL . '-- ' . trim(str_replace(PHP_EOL, ' ', $statement)) . PHP_EOL ;
+            $comment .= ($result->errors())
+                ? implode(PHP_EOL, array_map(fn($err) => "-- $err", $result->errors())) . PHP_EOL
+                : '';
 
-            return $comment;
+            return $comment . PHP_EOL;
         }
 
-        return '-- \n';
-
+        return '';
     }
 
     protected function header(): string

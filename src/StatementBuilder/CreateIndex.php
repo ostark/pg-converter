@@ -15,7 +15,7 @@ class CreateIndex implements Statement
 
     public function __construct(protected string $statement)
     {
-        // ...
+        $this->statement = str_replace('"', '', $this->statement);
     }
 
     public function make(): Result

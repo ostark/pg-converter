@@ -66,7 +66,7 @@ class CreateTable implements Statement
 
         $start = "CREATE TABLE {$this->table} (\n";
         $fieldDefinitions = rtrim(implode(PHP_EOL, $lines), ',');
-        $end = "\n) ENGINE={$this->config->getEngine()} DEFAULT CHARACTER SET {$this->config->getCharset()}";
+        $end = "\n) ENGINE={$this->config->getEngine()} DEFAULT CHARACTER SET {$this->config->getCharset()};";
 
         return new Success($start . $fieldDefinitions . $end);
     }

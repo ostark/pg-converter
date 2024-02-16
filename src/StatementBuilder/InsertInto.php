@@ -56,8 +56,8 @@ class InsertInto implements Statement
         foreach ($values as $key => $value) {
             $values[$key] = match ($value) {
                 '\N' => 'NULL',
-                'true' => 1,
-                'false' => 0,
+                'true', 't' => 1,
+                'false', 'f' => 0,
                 default => (is_string($value)) ? "'{$value}'" : $value
             };
         }
