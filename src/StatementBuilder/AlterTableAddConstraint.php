@@ -37,7 +37,7 @@ class AlterTableAddConstraint implements Statement
         }
 
         $table =  $matches['table'];
-        $schema = $matches['table'];
+        $schema = $matches['schema'];
 
         $statement = "ALTER TABLE {$table}" . PHP_EOL;
         $statement .= str_replace("{$schema}.", "", $this->addConstraint);

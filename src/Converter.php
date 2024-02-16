@@ -13,6 +13,7 @@ use ostark\PgConverter\StatementBuilder\BuilderResult\Success;
 use ostark\PgConverter\StatementBuilder\CreateIndex;
 use ostark\PgConverter\StatementBuilder\CreateSequence;
 use ostark\PgConverter\StatementBuilder\CreateTable;
+use ostark\PgConverter\StatementBuilder\DropTableIfExists;
 use ostark\PgConverter\StatementBuilder\InsertInto;
 use ostark\PgConverter\StatementBuilder\Statement;
 
@@ -98,7 +99,6 @@ class Converter
                 continue;
             }
 
-
             if (str_starts_with($line, 'CREATE SEQUENCE')) {
                 $builder = new MultilineStatement();
                 $builder->setStopCharacter('CACHE 1;');
@@ -107,8 +107,6 @@ class Converter
 
                 continue;
             }
-
-
 
             // ALTER TABLE ONLY can contain one or two lines
             if (str_starts_with($line, 'ALTER TABLE ONLY')) {
@@ -138,6 +136,12 @@ class Converter
 
             if (str_starts_with($line, 'ALTER SEQUENCE')) {
                 yield $this->handleResult((new AlterTableAutoIncrement($line))->make());
+
+                continue;
+            }
+
+            if (str_starts_with($line, 'DROP TABLE IF EXISTS')) {
+                yield $this->handleResult((new DropTableIfExists($line))->make());
 
                 continue;
             }
@@ -214,6 +218,7 @@ class Converter
 
         return '';
     }
+
 
     protected function header(): string
     {

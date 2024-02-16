@@ -13,7 +13,6 @@ interface Statement
         'DROP INDEX IF EXISTS',
         'DROP SEQUENCE IF EXISTS',
         'ALTER SEQUENCE',
-        'DROP TABLE IF EXISTS',
         'CREATE EXTENSION',
         'SELECT pg_catalog',
         'SET ', // <-- space is intentional
