@@ -20,8 +20,7 @@ class FileWriter
 
         /** @var string $line */
         foreach ($this->lines as $line) {
-            $lineCount++;
-            if (fwrite($handle, $line)) {
+            if (fwrite($handle, $line . PHP_EOL)) {
                 $lineCount++;
             }
         }

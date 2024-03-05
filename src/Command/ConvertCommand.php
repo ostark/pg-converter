@@ -67,10 +67,11 @@ class ConvertCommand extends \Symfony\Component\Console\Command\Command
 
         // Output some stats
         print_r([
-            'ERRORS' => $converter->getErrors(),
-            'UNKNOWN' => array_slice($converter->getUnknownStatements(), 0, 50),
-            'UNSUPPORTED' => array_slice($converter->getUnsupportedStatements(), 0, 50),
+            //'ERRORS' => $converter->getErrors(),
+            //'UNKNOWN' => array_slice($converter->getUnknownStatements(), 0, 50),
+            //'UNSUPPORTED' => array_slice($converter->getUnsupportedStatements(), 0, 50),
             'LINES_WRITTEN' => $lineCount,
+            'MEMORY_PEAK' => memory_get_peak_usage(true) / 1024 / 1024 . ' MB',
         ]);
 
         return 0;
